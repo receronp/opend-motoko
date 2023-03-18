@@ -24,6 +24,10 @@
       },
       "source": ["src/opend_frontend/assets", "dist/opend_frontend/"],
       "type": "assets"
+    },
+    "opend_nft": {
+      "main": "src/opend_nft/nft.mo",
+      "type": "motoko"
     }
   },
   "defaults": {

@@ -13,7 +13,7 @@
     "prebuild": "npm run generate",
     "start": "webpack serve --mode development --env development",
     "prestart": "npm run generate",
-    "generate": "dfx generate opend_backend"
+    "generate": "dfx generate opend_backend && dfx generate opend_nft"
   },
   "devDependencies": {
     "@dfinity/agent": "0.15.4",
