@@ -8,7 +8,7 @@ import { idlFactory } from "../../../declarations/opend_nft";
 function Item(props) {
   const [nft, setNFT] = useState({ name: null, owner: null, image: null });
 
-  const id = Principal.fromText(props.id);
+  const id = props.id;
 
   const localhost = "http://localhost:8080/";
   const agent = new HttpAgent({ host: localhost });
