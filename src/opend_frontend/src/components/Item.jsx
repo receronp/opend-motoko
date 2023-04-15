@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
-import logo from "../../assets/logo.png";
 import { HttpAgent } from "@dfinity/agent";
-import { Principal } from "@dfinity/principal";
 import { Actor } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/opend_nft";
+import { opend_backend } from "../../../declarations/opend_backend/index";
+import Button from "./Button";
 
 function Item(props) {
   const [nft, setNFT] = useState({ name: null, owner: null, image: null });
+  const [button, setButton] = useState();
+  const [priceInput, setPriceInput] = useState();
 
   const id = props.id;
 
   const localhost = "http://localhost:8080/";
   const agent = new HttpAgent({ host: localhost });
+  // TODO: Remove following line for live deploy.
+  agent.fetchRootKey();
+  let NFTActor;
 
   async function loadNFT() {
-    const NFTActor = await Actor.createActor(idlFactory, {
+    NFTActor = await Actor.createActor(idlFactory, {
       agent,
       canisterId: id,
     });
@@ -28,6 +33,30 @@ function Item(props) {
     );
 
     setNFT({ name: name, owner: owner.toText(), image: image });
+    setButton(<Button handleClick={handleSell} text="Sell" />);
+  }
+
+  let price;
+  function handleSell() {
+    setPriceInput(
+      <input
+        placeholder="Price in DANG"
+        type="number"
+        className="price-input"
+        value={price}
+        onChange={(e) => (price = e.target.value)}
+      />
+    );
+    setButton(<Button handleClick={sellItem} text="Confirm" />);
+  }
+
+  async function sellItem() {
+    const listingResult = await opend_backend.listItem(props.id, Number(price));
+    if (listingResult === "Success") {
+      const openDId = await opend_backend.getOpenDCanisterID();
+      const transferResult = await NFTActor.transferOwnership(openDId);
+      console.log(transferResult);
+    }
   }
 
   useEffect(() => {
@@ -49,6 +78,8 @@ function Item(props) {
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {nft.owner}
           </p>
+          {priceInput}
+          {button}
         </div>
       </div>
     </div>
