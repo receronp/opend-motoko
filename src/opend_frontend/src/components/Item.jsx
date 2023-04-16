@@ -9,6 +9,9 @@ function Item(props) {
   const [nft, setNFT] = useState({ name: null, owner: null, image: null });
   const [button, setButton] = useState();
   const [priceInput, setPriceInput] = useState();
+  const [loaderHidden, setLoaderHidden] = useState(true);
+  const [blur, setBlur] = useState();
+  const [sellStatus, setSellStatus] = useState("");
 
   const id = props.id;
 
@@ -33,7 +36,19 @@ function Item(props) {
     );
 
     setNFT({ name: name, owner: owner.toText(), image: image });
-    setButton(<Button handleClick={handleSell} text="Sell" />);
+
+    const nftIsListed = await opend_backend.isListed(id);
+    if (nftIsListed) {
+      setNFT((prevState) => {
+        return { ...prevState, owner: "OpenD" };
+      });
+      setBlur({
+        filter: "blur(4px)",
+      });
+      setSellStatus("Listed");
+    } else {
+      setButton(<Button handleClick={handleSell} text="Sell" />);
+    }
   }
 
   let price;
@@ -51,12 +66,25 @@ function Item(props) {
   }
 
   async function sellItem() {
+    setBlur({
+      filter: "blur(4px)",
+    });
+    setLoaderHidden(false);
     const listingResult = await opend_backend.listItem(props.id, Number(price));
     if (listingResult === "Success") {
       const openDId = await opend_backend.getOpenDCanisterID();
       const transferResult = await NFTActor.transferOwnership(openDId);
       console.log(transferResult);
+      if (transferResult === "Success") {
+        setButton();
+        setPriceInput();
+        setNFT((prevState) => {
+          return { ...prevState, owner: "OpenD" };
+        });
+        setSellStatus("Listed");
+      }
     }
+    setLoaderHidden(true);
   }
 
   useEffect(() => {
@@ -69,11 +97,18 @@ function Item(props) {
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"
           src={nft.image}
+          style={blur}
         />
+        <div className="lds-ellipsis" hidden={loaderHidden}>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
         <div className="disCardContent-root">
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
             {nft.name}
-            <span className="purple-text"></span>
+            <span className="purple-text"> {sellStatus}</span>
           </h2>
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {nft.owner}
